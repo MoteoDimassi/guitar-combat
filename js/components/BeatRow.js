@@ -58,6 +58,11 @@ export class BeatRow {
       const arrow = document.createElement('div');
       arrow.className = 'arrow-container';
       arrow.innerHTML = this.arrowSvg(beat.direction, i === this.currentIndex);
+      
+      // Добавляем обработчик клика на стрелку для установки текущей позиции
+      arrow.addEventListener('click', () => {
+        this.onArrowClick(i);
+      });
 
       // Круг переключения
       const circle = document.createElement('div');
@@ -102,5 +107,30 @@ export class BeatRow {
 
   getBeats() {
     return this.beats;
+  }
+  
+  onArrowClick(index) {
+    // Устанавливаем текущую позицию воспроизведения
+    this.currentIndex = index;
+    this.render();
+    
+    // Обновляем глобальное состояние
+    if (window.app) {
+      window.app.state.currentIndex = index;
+    }
+    
+    // Если воспроизведение активно, обновляем метроном
+    if (window.app && window.app.metronome && window.app.playback && window.app.playback.isPlaying()) {
+      window.app.metronome.setCurrentBeat(index);
+    }
+    
+    // Вызываем callback, если он установлен
+    if (this.onPositionChange) {
+      this.onPositionChange(index);
+    }
+  }
+  
+  setOnPositionChange(callback) {
+    this.onPositionChange = callback;
   }
 }

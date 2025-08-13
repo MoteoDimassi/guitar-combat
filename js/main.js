@@ -2,32 +2,32 @@
 import { BeatRow } from './components/BeatRow.js';
 import { Controls } from './components/Controls.js';
 import { Playback } from './components/Playback.js';
-import { Metronome } from './audio/Metronome.js';
 import { ExportUtils } from './utils/ExportUtils.js';
+import { Metronome } from './components/Metronome.js';
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {
   // Создание экземпляров компонентов
-  const metronome = new Metronome();
   const beatRow = new BeatRow();
   const controls = new Controls(beatRow);
-  const playback = new Playback(metronome, beatRow);
+  const playback = new Playback(beatRow);
   const exportUtils = new ExportUtils(beatRow);
+  const metronome = new Metronome();
 
   // Инициализация компонентов
-  await metronome.init(); // Инициализация метронома
   beatRow.init();
   controls.init();
   playback.init();
   exportUtils.init();
+  metronome.init();
 
   // Глобальное состояние приложения
   window.app = {
     beatRow,
     controls,
     playback,
-    metronome,
     exportUtils,
+    metronome,
     state: {
       count: 8,
       beats: [],

@@ -13,12 +13,7 @@ export class Controls {
     // Кнопки выбора количества битов
     document.querySelectorAll('.count-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.count-btn').forEach(b => {
-          b.classList.remove('active');
-        });
-        btn.classList.add('active');
-        const n = Number(btn.getAttribute('data-count'));
-        this.setCount(n);
+        this.setCount(Number(btn.getAttribute('data-count')));
       });
     });
 
@@ -44,7 +39,26 @@ export class Controls {
       window.app.state.count = n;
       window.app.state.beats = beats;
     }
+    
+    // Обновление визуального состояния кнопок
+    this.updateCountButtons(n);
   }
+
+  updateCountButtons(activeCount) {
+  console.log('Обновляем кнопки, активная =', activeCount); // 🟢 проверка
+  document.querySelectorAll('.count-btn').forEach(btn => {
+    const count = Number(btn.getAttribute('data-count'));
+    console.log('Проверяем кнопку', count, 'классы до:', btn.className); // 🟢
+    if (count === activeCount) {
+      btn.classList.add('active', 'bg-indigo-600', 'text-white');
+      btn.classList.remove('bg-gray-100');
+    } else {
+      btn.classList.remove('active', 'bg-indigo-600', 'text-white');
+      btn.classList.add('bg-gray-100');
+    }
+    console.log('Классы после:', btn.className); // 🟢
+  });
+}
 
   makeBeats(n) {
     const arr = [];

@@ -1,11 +1,8 @@
 // Компонент воспроизведения
 export class Playback {
-  constructor(metronome, beatRow) {
-    this.metronome = metronome;
+  constructor(beatRow) {
     this.beatRow = beatRow;
     this.playing = false;
-    this.currentIndex = 0;
-    this.intervalId = null;
   }
 
   init() {
@@ -28,71 +25,49 @@ export class Playback {
   }
 
   async startPlayback() {
-    if (!this.metronome.isInitialized()) {
-      await this.metronome.init();
-    }
-
     this.playing = true;
     this.updateButtonState();
 
     const bpm = Number(document.getElementById('bpm').value) || 90;
-    const speed = Number(document.getElementById('speed').value) || 100;
     const count = window.app ? window.app.state.count : 8;
+    const currentIndex = window.app ? window.app.state.currentIndex : 0;
     
-    const metronomeInterval = (60 / bpm) * 1000 * (100 / speed); // ms per metronome beat
-
-    this.currentIndex = 0;
-    this.beatRow.setCurrentIndex(this.currentIndex);
-
-    // Calculate arrow movement interval based on count
-    let arrowMoveInterval;
-    if (count === 4) {
-      arrowMoveInterval = metronomeInterval;
-    } else if (count === 8) {
-      arrowMoveInterval = metronomeInterval / 2;
-    } else if (count === 16) {
-      arrowMoveInterval = metronomeInterval / 4;
+    // Используем метроном вместо собственной логики
+    if (window.app && window.app.metronome) {
+      window.app.metronome.setBpm(bpm);
+      window.app.metronome.setBeatCount(count);
+      
+      // Устанавливаем текущую позицию перед запуском
+      if (currentIndex >= 0) {
+        window.app.metronome.setCurrentBeat(currentIndex);
+      }
+      
+      window.app.metronome.start();
+      
+      // Подписываемся на события метронома
+      window.app.metronome.onBeat = (beatIndex) => {
+        this.beatRow.setCurrentIndex(beatIndex);
+        
+        // Обновление глобального состояния
+        if (window.app) {
+          window.app.state.currentIndex = beatIndex;
+          window.app.state.playing = this.playing;
+        }
+      };
     }
-    
-    // Initialize metronome beat counter for this playback session
-    let metronomeBeat = 0;
-    const beats = this.beatRow.getBeats();
-    
-    // Start arrow movement and metronome together
-    this.intervalId = setInterval(() => {
-      // highlight current arrow first
-      this.beatRow.setCurrentIndex(this.currentIndex);
-      
-      // then trigger metronome sound immediately
-      if (metronomeBeat === 0) {
-        this.metronome.playAccent();
-      } else {
-        this.metronome.playNormal();
-      }
-      
-      // update indices
-      this.currentIndex = (this.currentIndex + 1) % beats.length;
-      metronomeBeat = (metronomeBeat + 1) % 4;
-      
-      // Обновление глобального состояния
-      if (window.app) {
-        window.app.state.currentIndex = this.currentIndex;
-        window.app.state.playing = this.playing;
-      }
-    }, arrowMoveInterval);
   }
 
   stopPlayback() {
     this.playing = false;
     this.updateButtonState();
     
-    // Clear interval
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+    // Останавливаем метроном
+    if (window.app && window.app.metronome) {
+      window.app.metronome.stop();
     }
     
-    this.beatRow.setCurrentIndex(-1); // Сброс подсветки
+    // Не сбрасываем подсветку, чтобы сохранить текущую позицию
+    // this.beatRow.setCurrentIndex(-1);
     
     // Обновление глобального состояния
     if (window.app) {
